@@ -1,0 +1,17 @@
+# Portable Network Tester Configuration Example
+# Copy this to config.yml and modify as needed
+
+logging:
+  level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  path: logs/network_tester.log
+
+network:
+  interface: null  # null for auto-detect, or specify like "eth0"
+  test_hosts:
+    dns: google.com  # Host to use for DNS testing
+    internet: 8.8.8.8  # Host to use for internet reachability
+
+ui:
+  fullscreen: false  # Set to true for production on Raspberry Pi
+  width: 800
+  height: 480
