@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from loguru import logger
+
 from ui.app import NetworkTesterApp
 from utils.config import load_config
 
@@ -17,10 +18,10 @@ def setup_logging() -> None:
     config = load_config()
     log_level = config.get("logging", {}).get("level", "INFO")
     log_path = config.get("logging", {}).get("path", "logs/network_tester.log")
-    
+
     # Remove default logger
     logger.remove()
-    
+
     # Add console handler
     logger.add(
         sys.stderr,
@@ -28,7 +29,7 @@ def setup_logging() -> None:
         level=log_level,
         colorize=True,
     )
-    
+
     # Add file handler
     logger.add(
         log_path,
@@ -45,17 +46,17 @@ def main() -> int:
     try:
         setup_logging()
         logger.info("Starting Portable Network Tester")
-        
+
         app = NetworkTesterApp()
         app.run()
-        
+
         logger.info("Application closed normally")
         return 0
-        
+
     except KeyboardInterrupt:
         logger.info("Application interrupted by user")
         return 0
-        
+
     except Exception as e:
         logger.exception(f"Fatal error: {e}")
         return 1

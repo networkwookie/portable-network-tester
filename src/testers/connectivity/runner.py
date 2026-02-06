@@ -5,6 +5,7 @@ import time
 from typing import Callable, Optional
 
 from loguru import logger
+
 from testers.connectivity.ip_services import IPServicesTester
 from testers.connectivity.link import LinkTester
 from testers.connectivity.models import Status, TestResult

@@ -13,6 +13,7 @@ from kivy.uix.progressbar import ProgressBar
 from kivy.uix.screenmanager import Screen
 from kivy.uix.scrollview import ScrollView
 from loguru import logger
+
 from testers.connectivity.models import Status, TestResult
 from testers.connectivity.runner import ConnectivityTestRunner
 
