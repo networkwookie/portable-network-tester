@@ -60,9 +60,11 @@ Documentation = "https://github.com/yourusername/portable-network-tester/wiki"
 Repository = "https://github.com/yourusername/portable-network-tester"
 Issues = "https://github.com/yourusername/portable-network-tester/issues"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["*"]
 
 [tool.black]
 line-length = 100
