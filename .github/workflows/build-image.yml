@@ -15,6 +15,9 @@ on:
           - test
           - release
 
+permissions:
+  contents: write
+
 jobs:
   build-image:
     name: Build Raspberry Pi OS Image
