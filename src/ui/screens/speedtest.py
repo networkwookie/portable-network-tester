@@ -1,6 +1,7 @@
 """
 Speed test screen placeholder.
 """
+
 from kivy.graphics import Color, Rectangle
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
@@ -17,7 +18,7 @@ class SpeedTestScreen(Screen):
 
     def build_ui(self) -> None:
         """Build the UI."""
-        layout = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        layout = BoxLayout(orientation="vertical", padding=20, spacing=15)
 
         with layout.canvas.before:
             Color(0.1, 0.1, 0.15, 1)
@@ -26,19 +27,17 @@ class SpeedTestScreen(Screen):
 
         # Back button
         btn_back = Button(
-            text='← Back to Menu',
-            size_hint=(1, 0.1),
-            background_color=(0.3, 0.3, 0.3, 1)
+            text="← Back to Menu", size_hint=(1, 0.1), background_color=(0.3, 0.3, 0.3, 1)
         )
-        btn_back.bind(on_press=lambda x: setattr(self.manager, 'current', 'menu'))
+        btn_back.bind(on_press=lambda x: setattr(self.manager, "current", "menu"))
         layout.add_widget(btn_back)
 
         # Title
         title = Label(
-            text='[b]Speed Test[/b]\n\n(Coming Soon)',
+            text="[b]Speed Test[/b]\n\n(Coming Soon)",
             markup=True,
-            font_size='32sp',
-            color=(0.2, 0.8, 1, 1)
+            font_size="32sp",
+            color=(0.2, 0.8, 1, 1),
         )
         layout.add_widget(title)
 

@@ -1,6 +1,7 @@
 """
 Main entry point for Portable Network Tester application.
 """
+
 import sys
 from pathlib import Path
 

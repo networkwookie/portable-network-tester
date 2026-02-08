@@ -1,6 +1,7 @@
 """
 System tests for UI and application flow.
 """
+
 import os
 from unittest.mock import Mock, patch
 

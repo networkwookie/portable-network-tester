@@ -1,6 +1,7 @@
 """
 Main Kivy application for Network Tester.
 """
+
 from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager
@@ -29,10 +30,10 @@ class NetworkTesterApp(App):
         self.screen_manager = ScreenManager()
 
         # Add screens
-        self.screen_manager.add_widget(MenuScreen(name='menu'))
-        self.screen_manager.add_widget(ConnectivityTestScreen(name='connectivity'))
-        self.screen_manager.add_widget(SpeedTestScreen(name='speedtest'))
-        self.screen_manager.add_widget(CaptureScreen(name='capture'))
+        self.screen_manager.add_widget(MenuScreen(name="menu"))
+        self.screen_manager.add_widget(ConnectivityTestScreen(name="connectivity"))
+        self.screen_manager.add_widget(SpeedTestScreen(name="speedtest"))
+        self.screen_manager.add_widget(CaptureScreen(name="capture"))
 
         logger.info("Application UI initialized")
         return self.screen_manager

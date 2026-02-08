@@ -1,6 +1,7 @@
 """
 Connectivity test screen for Network Tester.
 """
+
 import threading
 
 from kivy.clock import Clock

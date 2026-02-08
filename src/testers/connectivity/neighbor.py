@@ -1,6 +1,7 @@
 """
 LLDP neighbor discovery.
 """
+
 import json
 import subprocess
 from typing import Optional

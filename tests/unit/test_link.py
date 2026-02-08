@@ -1,6 +1,7 @@
 """
 Unit tests for link testing module.
 """
+
 from unittest.mock import Mock, mock_open, patch
 
 import pytest

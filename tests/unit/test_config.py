@@ -1,6 +1,7 @@
 """
 Unit tests for configuration utilities.
 """
+
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
@@ -59,9 +60,11 @@ network:
   interface: eth0
 """
 
-        with patch("utils.config.get_config_path") as mock_path, patch(
-            "builtins.open", mock_open(read_data=yaml_content)
-        ), patch("pathlib.Path.exists", return_value=True):
+        with (
+            patch("utils.config.get_config_path") as mock_path,
+            patch("builtins.open", mock_open(read_data=yaml_content)),
+            patch("pathlib.Path.exists", return_value=True),
+        ):
             mock_path.return_value = Path("config.yml")
 
             config = load_config()
@@ -76,9 +79,11 @@ network:
         config = {"logging": {"level": "INFO"}, "network": {"interface": "eth0"}}
 
         mock_file = mock_open()
-        with patch("utils.config.get_config_path") as mock_path, patch(
-            "builtins.open", mock_file
-        ), patch("pathlib.Path.mkdir"):
+        with (
+            patch("utils.config.get_config_path") as mock_path,
+            patch("builtins.open", mock_file),
+            patch("pathlib.Path.mkdir"),
+        ):
             mock_path.return_value = Path("config.yml")
 
             result = save_config(config)
@@ -90,8 +95,9 @@ network:
         """Test save config handles errors."""
         config = {"test": "data"}
 
-        with patch("utils.config.get_config_path") as mock_path, patch(
-            "builtins.open", side_effect=PermissionError()
+        with (
+            patch("utils.config.get_config_path") as mock_path,
+            patch("builtins.open", side_effect=PermissionError()),
         ):
             mock_path.return_value = Path("config.yml")
 
@@ -103,9 +109,11 @@ network:
         """Test loading config with invalid YAML."""
         invalid_yaml = "{ invalid yaml content ]["
 
-        with patch("utils.config.get_config_path") as mock_path, patch(
-            "builtins.open", mock_open(read_data=invalid_yaml)
-        ), patch("pathlib.Path.exists", return_value=True):
+        with (
+            patch("utils.config.get_config_path") as mock_path,
+            patch("builtins.open", mock_open(read_data=invalid_yaml)),
+            patch("pathlib.Path.exists", return_value=True),
+        ):
             mock_path.return_value = Path("config.yml")
 
             config = load_config()

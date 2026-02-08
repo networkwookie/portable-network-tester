@@ -1,6 +1,7 @@
 """
 IP services testing (DHCP, DNS).
 """
+
 import socket
 import subprocess
 import time

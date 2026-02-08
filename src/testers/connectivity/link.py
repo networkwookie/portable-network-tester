@@ -1,6 +1,7 @@
 """
 Physical link health testing.
 """
+
 import re
 import subprocess
 from typing import Optional

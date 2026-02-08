@@ -1,6 +1,7 @@
 """
 Integration tests for connectivity testing.
 """
+
 from unittest.mock import patch
 
 import pytest
