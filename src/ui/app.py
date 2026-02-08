@@ -6,7 +6,6 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.screenmanager import ScreenManager
 from loguru import logger
-
 from ui.screens.capture import CaptureScreen
 from ui.screens.connectivity import ConnectivityTestScreen
 from ui.screens.menu import MenuScreen

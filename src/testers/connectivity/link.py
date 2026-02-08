@@ -7,7 +7,6 @@ import subprocess
 from typing import Optional
 
 from loguru import logger
-
 from testers.connectivity.models import LinkStatus
 
 

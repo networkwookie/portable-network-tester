@@ -9,7 +9,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from loguru import logger
-
 from ui.app import NetworkTesterApp
 from utils.config import load_config
 
