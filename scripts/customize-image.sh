@@ -1,6 +1,6 @@
 #!/bin/bash
 # Customize an existing Raspberry Pi OS image with Network Tester
-# This mounts an existing .img file and installs the application
+# This version includes GUI support and touchscreen configuration
 
 set -e
 
@@ -15,14 +15,7 @@ if [ -z "$BASE_IMAGE" ]; then
     echo "Usage: $0 <base-raspios-image.img>"
     echo ""
     echo "Example:"
-    echo "  $0 2024-03-15-raspios-bookworm-arm64-lite.img"
-    echo ""
-    echo "This script will:"
-    echo "  1. Copy the base image"
-    echo "  2. Mount it"
-    echo "  3. Install Network Tester"
-    echo "  4. Configure auto-start"
-    echo "  5. Create a bootable image"
+    echo "  $0 2024-03-15-raspios-bookworm-arm64.img"
     exit 1
 fi
 
@@ -55,7 +48,7 @@ losetup -P "$LOOP_DEVICE" "$OUTPUT_IMAGE"
 # Wait for device to be ready
 sleep 2
 
-# Find the root partition (usually partition 2)
+# Find the root partition
 ROOT_PARTITION="${LOOP_DEVICE}p2"
 BOOT_PARTITION="${LOOP_DEVICE}p1"
 
@@ -87,17 +80,43 @@ cp -r "$PROJECT_ROOT/scripts" "$MOUNT_POINT/opt/network-tester/"
 # Configure for fullscreen
 sed -i 's/fullscreen: false/fullscreen: true/g' "$MOUNT_POINT/opt/network-tester/config.yml"
 
-# Create installation script to run on first boot
+# Configure boot/config.txt for 7" touchscreen
+echo "Configuring touchscreen..."
+cat >> "$MOUNT_POINT/boot/config.txt" << 'EOF'
+
+# Network Tester Configuration
+# 7" Touchscreen Support
+dtoverlay=vc4-kms-v3d
+dtoverlay=rpi-ft5406
+ignore_lcd=0
+
+# Disable rainbow splash
+disable_splash=1
+
+# HDMI settings
+hdmi_force_hotplug=1
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt=800 480 60 6 0 0 0
+EOF
+
+# Create installation script for first boot
+echo "Creating first-boot installation script..."
 cat > "$MOUNT_POINT/opt/network-tester-install.sh" << 'INSTALL_SCRIPT'
 #!/bin/bash
 set -e
 
-echo "Installing Network Tester dependencies..."
+echo "=========================================="
+echo "Network Tester First-Boot Installation"
+echo "=========================================="
+echo "Started: $(date)"
 
 # Update package list
+echo "Updating package lists..."
 apt-get update
 
 # Install system dependencies
+echo "Installing system dependencies..."
 apt-get install -y \
     python3 python3-pip python3-venv \
     libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
@@ -107,65 +126,91 @@ apt-get install -y \
     gstreamer1.0-plugins-good gstreamer1.0-plugins-ugly \
     gstreamer1.0-omx gstreamer1.0-alsa \
     python3-dev libmtdev-dev xclip xsel libjpeg-dev \
-    tcpdump net-tools ethtool lldpd iputils-ping traceroute
+    tcpdump net-tools ethtool lldpd iputils-ping traceroute \
+    xserver-xorg xinit lightdm \
+    fonts-freefont-ttf
 
 # Enable LLDP
+echo "Enabling LLDP daemon..."
 systemctl enable lldpd
 systemctl start lldpd
 
 # Create virtual environment
+echo "Creating Python virtual environment..."
 cd /opt/network-tester
 python3 -m venv venv
 
 # Install Python packages
+echo "Installing Python dependencies..."
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install -e .
 
 # Set proper permissions
+echo "Setting permissions..."
 chown -R pi:pi /opt/network-tester
 
 # Install systemd service
+echo "Installing systemd service..."
 cp /opt/network-tester/scripts/network-tester.service /etc/systemd/system/
 sed -i 's|/home/pi/portable-network-tester|/opt/network-tester|g' /etc/systemd/system/network-tester.service
+systemctl daemon-reload
 systemctl enable network-tester
 
+# Configure auto-login for GUI
+echo "Configuring auto-login..."
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/50-network-tester.conf << 'LIGHTDM'
+[Seat:*]
+autologin-user=pi
+autologin-user-timeout=0
+user-session=LXDE
+LIGHTDM
+
+# Ensure pi user password is set
+echo "Setting pi user password..."
+echo "pi:raspberry" | chpasswd
+
 # Clean up
+echo "Cleaning up..."
 apt-get clean
 rm -rf /var/lib/apt/lists/*
 
 # Create completion marker
 touch /opt/network-tester/.installed
 
+# Create info file
+cat > /opt/network-tester/IMAGE_INFO << 'INFOEOF'
+Network Tester Image
+Installation completed: $(date)
+INFOEOF
+
+echo "=========================================="
+echo "Installation Complete!"
+echo "=========================================="
+echo "The Network Tester will start automatically."
+echo "Default credentials: pi / raspberry"
+
 # Remove this script
 rm /opt/network-tester-install.sh
 
-echo "Network Tester installation complete!"
+# Reboot to start the application
+echo "Rebooting in 10 seconds..."
+sleep 10
+reboot
 INSTALL_SCRIPT
 
 chmod +x "$MOUNT_POINT/opt/network-tester-install.sh"
 
-# Add to rc.local for first-boot installation
+# Configure rc.local for first-boot installation
+echo "Configuring first-boot trigger..."
 if [ -f "$MOUNT_POINT/etc/rc.local" ]; then
-    # Backup original
     cp "$MOUNT_POINT/etc/rc.local" "$MOUNT_POINT/etc/rc.local.backup"
-    
-    # Remove exit 0
     sed -i '/^exit 0/d' "$MOUNT_POINT/etc/rc.local"
-    
-    # Add our installation script
-    cat >> "$MOUNT_POINT/etc/rc.local" << 'RC_LOCAL'
-
-# Network Tester first-boot installation
-if [ -f /opt/network-tester-install.sh ]; then
-    /opt/network-tester-install.sh >> /var/log/network-tester-install.log 2>&1
-fi
-
-exit 0
-RC_LOCAL
 else
-    # Create rc.local if it doesn't exist
-    cat > "$MOUNT_POINT/etc/rc.local" << 'RC_LOCAL'
-#!/bin/bash
+    echo "#!/bin/bash" > "$MOUNT_POINT/etc/rc.local"
+fi
+
+cat >> "$MOUNT_POINT/etc/rc.local" << 'RC_LOCAL'
 
 # Network Tester first-boot installation
 if [ -f /opt/network-tester-install.sh ]; then
@@ -174,24 +219,53 @@ fi
 
 exit 0
 RC_LOCAL
-    chmod +x "$MOUNT_POINT/etc/rc.local"
-fi
+chmod +x "$MOUNT_POINT/etc/rc.local"
 
 # Set hostname
+echo "Configuring hostname..."
 echo "network-tester" > "$MOUNT_POINT/etc/hostname"
 sed -i 's/127.0.1.1.*/127.0.1.1\tnetwork-tester/g' "$MOUNT_POINT/etc/hosts"
 
 # Enable SSH
+echo "Enabling SSH..."
 touch "$MOUNT_POINT/boot/ssh"
 
-# Create image info
+# Configure SSH to allow password authentication
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' "$MOUNT_POINT/etc/ssh/sshd_config"
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' "$MOUNT_POINT/etc/ssh/sshd_config"
+
+# Ensure pi user exists with correct password
+echo "Ensuring pi user exists..."
+if ! grep -q "^pi:" "$MOUNT_POINT/etc/passwd"; then
+    echo "Creating pi user..."
+    chroot "$MOUNT_POINT" useradd -m -s /bin/bash -G sudo,video,audio,plugdev,netdev pi
+fi
+
+# Set password (this will be reset on first boot, but provides fallback)
+chroot "$MOUNT_POINT" sh -c 'echo "pi:raspberry" | chpasswd'
+
+# Create image info at root
 cat > "$MOUNT_POINT/opt/network-tester/IMAGE_INFO" << EOF
 Network Tester Image
 Base: $(basename "$BASE_IMAGE")
 Customized: $(date)
 Version: $(grep version "$PROJECT_ROOT/pyproject.toml" | head -1 | cut -d'"' -f2)
 
-Note: Dependencies will be installed on first boot (takes 5-10 minutes)
+Configuration:
+- GUI: Enabled (LXDE)
+- Touchscreen: Configured (7" official display)
+- SSH: Enabled
+- Auto-login: Enabled (user: pi)
+- Default Password: raspberry
+
+First Boot:
+- Installation takes 10-15 minutes
+- System will reboot automatically when complete
+- Application starts automatically after reboot
+
+Logs:
+- Installation: /var/log/network-tester-install.log
+- Application: /opt/network-tester/logs/network_tester.log
 EOF
 
 # Sync and unmount
@@ -212,12 +286,20 @@ echo "=========================================="
 echo "Output image: $OUTPUT_IMAGE"
 echo "Size: $(du -h "$OUTPUT_IMAGE" | cut -f1)"
 echo ""
+echo "Image features:"
+echo "  ✓ GUI enabled (LXDE desktop)"
+echo "  ✓ 7\" touchscreen configured"
+echo "  ✓ Auto-login enabled"
+echo "  ✓ SSH enabled"
+echo "  ✓ Network Tester pre-installed"
+echo ""
 echo "To write to SD card:"
 echo "  sudo dd if=$OUTPUT_IMAGE of=/dev/sdX bs=4M status=progress conv=fsync"
-echo "  (Replace /dev/sdX with your SD card device)"
 echo ""
-echo "First boot will take 5-10 minutes to install dependencies."
-echo "Check installation log: /var/log/network-tester-install.log"
+echo "First boot:"
+echo "  - Takes 10-15 minutes to install dependencies"
+echo "  - System will reboot automatically"
+echo "  - Application starts on second boot"
 echo ""
 echo "Default credentials:"
 echo "  Username: pi"
