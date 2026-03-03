@@ -48,31 +48,32 @@ jobs:
             xz-utils \
             zip
       
-      - name: Download base Raspberry Pi OS image
+      - name: Download Raspberry Pi OS WITH DESKTOP
         run: |
           mkdir -p build/images
           cd build/images
           
-          # Download Raspberry Pi OS with Desktop (not Lite!)
-          wget -q --show-progress \
-            https://downloads.raspberrypi.org/raspios_arm64/images/raspios_arm64-2024-03-15/2024-03-15-raspios-bookworm-arm64.img.xz \
-            || wget -q --show-progress \
-            https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-2024-03-15/2024-03-15-raspios-bookworm-arm64-lite.img.xz
+          # Download FULL desktop version (not Lite!)
+          wget -O raspios-desktop.img.xz \
+            "https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-03-15/2024-03-15-raspios-bookworm-arm64.img.xz"
           
-          # Extract
-          echo "Extracting image..."
-          xz -d *.img.xz
+          xz -d raspios-desktop.img.xz
           
-          ls -lh
+          # Verify size (desktop is 3GB+, Lite is <2GB)
+          SIZE=$(stat -c%s raspios-desktop.img)
+          SIZE_GB=$((SIZE / 1024 / 1024 / 1024))
+          echo "Image size: ${SIZE_GB}GB"
+          
+          if [ "$SIZE" -lt 2500000000 ]; then
+            echo "ERROR: Image too small!"
+            exit 1
+          fi
       
       - name: Customize image
         run: |
           cd build/images
-          BASE_IMG=$(ls *.img)
-          echo "Base image: $BASE_IMG"
-          
           chmod +x ${GITHUB_WORKSPACE}/scripts/customize-image.sh
-          sudo ${GITHUB_WORKSPACE}/scripts/customize-image.sh "$BASE_IMG"
+          sudo ${GITHUB_WORKSPACE}/scripts/customize-image.sh raspios-desktop.img
       
       - name: Validate Image Structure
         run: |
