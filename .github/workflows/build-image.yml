@@ -225,6 +225,45 @@ jobs:
             echo "--- End Info ---"
           fi
 
+          echo ""
+          echo "Validating systemd service configuration..."
+          
+          # Check service file has graphical.target
+          if sudo grep -q "WantedBy=graphical.target" "$MOUNT_POINT/etc/systemd/system/network-tester.service"; then
+            echo "✓ Service configured for graphical.target"
+          else
+            echo "✗ ERROR: Service not configured for graphical.target!"
+            sudo grep "WantedBy=" "$MOUNT_POINT/etc/systemd/system/network-tester.service"
+            exit 1
+          fi
+          
+          # Check After= includes graphical.target
+          if sudo grep -q "After=graphical.target" "$MOUNT_POINT/etc/systemd/system/network-tester.service"; then
+            echo "✓ Service waits for graphical.target"
+          else
+            echo "✗ ERROR: Service doesn't wait for graphical.target!"
+            sudo grep "After=" "$MOUNT_POINT/etc/systemd/system/network-tester.service"
+            exit 1
+          fi
+          
+          # Check User=pi
+          if sudo grep -q "User=pi" "$MOUNT_POINT/etc/systemd/system/network-tester.service"; then
+            echo "✓ Service runs as pi user"
+          else
+            echo "✗ ERROR: Service not running as pi user!"
+            exit 1
+          fi
+          
+          # Check DISPLAY environment is set
+          if sudo grep -q 'Environment="DISPLAY=:0"' "$MOUNT_POINT/etc/systemd/system/network-tester.service"; then
+            echo "✓ DISPLAY environment variable set"
+          else
+            echo "✗ ERROR: DISPLAY not configured!"
+            exit 1
+          fi
+          
+          echo "✓ Systemd service configuration validated"
+
           # Cleanup
           echo ""
           echo "Cleaning up..."
