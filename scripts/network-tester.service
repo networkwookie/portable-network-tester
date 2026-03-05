@@ -1,17 +1,17 @@
 [Unit]
 Description=Portable Network Tester
-After=network.target
+After=graphical.target
 
 [Service]
 Type=simple
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/portable-network-tester
+WorkingDirectory=/opt/network-tester
 Environment="DISPLAY=:0"
 Environment="XAUTHORITY=/home/pi/.Xauthority"
-ExecStart=/home/pi/portable-network-tester/venv/bin/python /home/pi/portable-network-tester/src/main.py
+ExecStart=/opt/network-tester/venv/bin/python /opt/network-tester/src/main.py
 Restart=on-failure
 RestartSec=10
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=graphical.target
