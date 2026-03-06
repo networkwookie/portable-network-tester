@@ -234,6 +234,20 @@ touch "$MOUNT_POINT/boot/ssh"
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' "$MOUNT_POINT/etc/ssh/sshd_config"
 sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' "$MOUNT_POINT/etc/ssh/sshd_config"
 
+# Skip initial setup wizard
+echo "Disabling first-run wizard..."
+rm -f "$MOUNT_POINT/etc/xdg/autostart/piwiz.desktop"
+touch "$MOUNT_POINT/etc/xdg/autostart/.skip-wizard"
+
+# Also disable wizard in alternative location
+if [ -f "$MOUNT_POINT/usr/share/applications/piwiz.desktop" ]; then
+    sudo mv "$MOUNT_POINT/usr/share/applications/piwiz.desktop" "$MOUNT_POINT/usr/share/applications/piwiz.desktop.disabled"
+fi
+
+# Configure SSH to allow password authentication
+sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' "$MOUNT_POINT/etc/ssh/sshd_config"
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' "$MOUNT_POINT/etc/ssh/sshd_config"
+
 # Ensure pi user exists with correct password
 echo "Ensuring pi user exists..."
 if ! grep -q "^pi:" "$MOUNT_POINT/etc/passwd"; then

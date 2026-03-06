@@ -272,6 +272,24 @@ jobs:
           
           echo "✓ Systemd service configuration validated"
 
+          echo ""
+          echo "Validating setup wizard is disabled..."
+          
+          # Check wizard autostart file is removed/disabled
+          if [ -f "$MOUNT_POINT/etc/xdg/autostart/piwiz.desktop" ]; then
+            echo "✗ ERROR: Setup wizard still enabled!"
+            exit 1
+          else
+            echo "✓ Setup wizard autostart removed"
+          fi
+          
+          # Check for skip marker
+          if [ -f "$MOUNT_POINT/etc/xdg/autostart/.skip-wizard" ]; then
+            echo "✓ Skip wizard marker present"
+          fi
+          
+          echo "✓ Setup wizard disabled"
+
           # Cleanup
           echo ""
           echo "Cleaning up..."
